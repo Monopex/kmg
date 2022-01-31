@@ -11,40 +11,50 @@
         dense
         outlined
         hide-details
+        :disabled="loading"
       ></v-select>
       <v-select
-        :items="lists.borehole"
+        v-model="filter.deposit"
+        :items="lists.deposit"
         item-text="title"
         item-value="id"
         label="Выберите месторождение"
         class="ma-2 max_select_width"
         dense
         outlined
+        clearable
         hide-details
+        :disabled="loading"
       ></v-select>
       <v-select
-        :items="lists.borehole"
-        item-text="title"
-        item-value="id"
+        v-model="filter.borehole_type"
+        :items="lists.borehole_type"
+        item-text="type"
+        item-value="type"
         label="Выберите тип скважины"
         class="ma-2 max_select_width"
         dense
         outlined
+        clearable
         hide-details
+        :disabled="loading"
       ></v-select>
       <v-select
-        :items="lists.borehole"
-        item-text="title"
-        item-value="id"
+        v-model="filter.borehole_condition"
+        :items="lists.borehole_condition"
+        item-text="condition"
+        item-value="condition"
         label="Выберите состояние"
         class="ma-2 max_select_width"
         dense
         outlined
+        clearable
         hide-details
+        :disabled="loading"
       ></v-select>
       <v-autocomplete
         v-model="filter.borehole"
-        :items="lists.borehole"
+        :items="lists.borehole_names"
         item-text="title"
         item-value="id"
         item-disabled="disabled"
@@ -53,24 +63,54 @@
         dense
         multiple
         outlined
+        clearable
         hide-details
+        :disabled="loading || loaded"
         no-data-text="Значение не найдено"
         @change="borehole_limit(5)"
       ></v-autocomplete>
 
-      <v-btn v-if="!loaded" class="ma-2" small
+      <v-btn
+        v-if="!loaded"
+        class="ma-2"
+        small
+        @click="show_filter()"
+        :loading="loading"
+        :disabled="loading"
         ><v-icon>mdi-plus</v-icon>Показать</v-btn
       >
-      <v-btn v-if="loaded" class="ma-2" small @click="clear_loaded_data()"
+      <v-btn
+        v-if="loaded"
+        class="ma-2"
+        small
+        @click="clear_loaded_data()"
+        :disabled="loading"
         ><v-icon>mdi-close</v-icon>Отмена</v-btn
       >
-      <v-btn v-if="loaded && filter.saved" class="ma-2" small
+      <v-btn
+        v-if="loaded && filter.saved"
+        class="ma-2"
+        small
+        :loading="loading"
+        :disabled="loading"
         ><v-icon>mdi-check</v-icon>Сохранить изменения</v-btn
       >
-      <v-btn v-if="loaded && !filter.saved" class="ma-2" small @click="save()"
+      <v-btn
+        v-if="loaded && !filter.saved"
+        class="ma-2"
+        small
+        @click="save()"
+        :loading="loading"
+        :disabled="loading"
         ><v-icon>mdi-check</v-icon>Сохранить</v-btn
       >
-      <v-btn v-if="loaded && filter.saved" class="ma-2" small
+      <v-btn
+        v-if="loaded && filter.saved"
+        class="ma-2"
+        small
+        :loading="loading"
+        :disabled="loading"
+        @click="delete_list()"
         ><v-icon>mdi-close</v-icon>Удалить</v-btn
       >
     </v-col>
@@ -92,48 +132,60 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in datasource" :key="'item_' + item.id">
-                <td>{{ item.deposit }}</td>
-                <td>{{ item.borehole }}</td>
-                <td>{{ item.borehole_type }}</td>
-                <td>{{ item.borehole_condition }}</td>
-                <td>
-                  <v-select
-                    v-model="item.level"
-                    :items="lists.levels"
-                    item-text="title"
-                    item-value="id"
-                    dense
-                    hide-details
-                    class="max_input_width"
-                  ></v-select>
-                </td>
-                <td>
-                  <v-text-field
-                    v-model="item.q_liquids"
-                    v-mask="doubleMask"
-                    class="max_input_width"
-                    :rules="[double_empty]"
-                  />
-                </td>
-                <td>
-                  <v-text-field
-                    v-model="item.water_cut"
-                    v-mask="doubleMask"
-                    class="max_input_width"
-                    :rules="[double_empty]"
-                  />
-                </td>
-                <td>
-                  <v-text-field
-                    v-model="item.oil_density"
-                    v-mask="doubleMask"
-                    class="max_input_width"
-                    :rules="[double_empty]"
-                  />
-                </td>
-                <td>{{ get_oil_flow_rate(item) }}</td>
-              </tr>
+              <template v-for="item in datasource">
+                <tr v-if="filter_item(item)" :key="'item_' + item.id">
+                  <td>{{ item.deposit.title }}</td>
+                  <td>{{ item.title }}</td>
+                  <td>
+                    <v-text-field
+                      v-model="item.type"
+                      class="max_input_text_width"
+                    />
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="item.condition"
+                      class="max_input_text_width"
+                    />
+                  </td>
+                  <td>
+                    <v-select
+                      v-model="item.level.id"
+                      :items="lists.level"
+                      item-text="title"
+                      item-value="id"
+                      dense
+                      hide-details
+                      class="max_input_width"
+                    ></v-select>
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="item.q_liquids"
+                      v-mask="doubleMask"
+                      class="max_input_width"
+                      :rules="[double_empty]"
+                    />
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="item.water_cut"
+                      v-mask="doubleMask"
+                      class="max_input_width"
+                      :rules="[double_empty]"
+                    />
+                  </td>
+                  <td>
+                    <v-text-field
+                      v-model="item.oil_density"
+                      v-mask="doubleMask"
+                      class="max_input_width"
+                      :rules="[double_empty]"
+                    />
+                  </td>
+                  <td>{{ get_oil_flow_rate(item) }}</td>
+                </tr>
+              </template>
             </tbody>
           </template>
         </v-simple-table>
@@ -149,6 +201,8 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
+
 import pieChart from "@/components/pieChart.vue";
 import BarChart from "@/components/BarChart.vue";
 
@@ -161,81 +215,28 @@ export default {
         d: { pattern: /[0-9.]/ },
       },
     },
-    loaded: true,
+    loading: false,
+    loaded: false,
     char_visible: false,
     filter: {
       saved: true,
       borehole: [],
+      deposit: null,
+      borehole_type: null,
+      borehole_condition: null,
     },
-    datasource: [
-      {
-        id: 1,
-        deposit: "АА",
-        borehole: "10Д",
-        borehole_type: "добывающая",
-        borehole_condition: "Наблюдательная",
-        level: 5, // Гозизонт
-        q_liquids: 11.6,
-        water_cut: 88.6, // Обводненность
-        oil_density: 0.83, // Плотность нефти
-      },
-      {
-        id: 2,
-        deposit: "АА",
-        borehole: "10Д",
-        borehole_type: "добывающая",
-        borehole_condition: "Наблюдательная",
-        level: 5, // Гозизонт
-        q_liquids: 11.6,
-        water_cut: 88.6, // Обводненность
-        oil_density: 0.83, // Плотность нефти
-      },
-    ],
+    datasource: [],
     borehole_counter: {
       props: {
         max: 2,
       },
     },
     lists: {
-      borehole: [
-        {
-          id: 1,
-          title: "AA",
-          disabled: false,
-        },
-        {
-          id: 2,
-          title: "BB",
-          disabled: false,
-        },
-        {
-          id: 3,
-          title: "CC",
-          disabled: false,
-        },
-      ],
-      levels: [
-        {
-          id: 1,
-          title: "I",
-        },
-        {
-          id: 2,
-          title: "II",
-        },
-        {
-          id: 3,
-          title: "III",
-        },
-        {
-          id: 4,
-          title: "IV",
-        },
-        {
-          id: 5,
-          title: "V",
-        },
-      ],
+      deposit: [],
+      borehole_type: [],
+      borehole_condition: [],
+      borehole_names: [],
+      level: [],
       saved: [
         {
           value: true,
@@ -247,52 +248,70 @@ export default {
         },
       ],
     },
-    levels1: [
-      {
-        key: "I",
-        val: 0.01,
-      },
-      {
-        key: "II",
-        val: 0.03,
-      },
-      {
-        key: "III",
-        val: 0.05,
-      },
-      {
-        key: "IV",
-        val: 0.01,
-      },
-      {
-        key: "V",
-        val: 0.03,
-      },
-    ],
-    levels: {
-      1: 0.01,
-      2: 0.03,
-      3: 0.05,
-      4: 0.01,
-      5: 0.03,
-    },
+    levels: [],
   }),
+  async created() {
+    this.loading = true;
+    let response = await this.get_dropdown_lists({
+      filter: [
+        "deposit",
+        "level",
+        "borehole_type",
+        "borehole_condition",
+        "borehole_names",
+      ],
+    });
+    this.apply_list(response);
+    this.levels_gen();
+    this.loading = false;
+  },
   methods: {
+    ...mapActions({
+      get_dropdown_lists: "Field/GET_LISTS",
+      get_filter: "Field/GET_FILTER",
+      remove_field: "Field/REMOVE",
+    }),
+    apply_list(list) {
+      for (const key in list) {
+        this.$set(this.lists, key, list[key]);
+      }
+    },
+    filter_item(item) {
+      let response = true;
+      if (this.filter.saved != item.saved) response = false;
+      if (this.filter.deposit != null && this.filter.deposit != item.deposit.id)
+        response = false;
+      if (
+        this.filter.borehole_type != null &&
+        this.filter.borehole_type != item.type
+      )
+        response = false;
+      if (
+        this.filter.borehole_condition != null &&
+        this.filter.borehole_condition != item.condition
+      )
+        response = false;
+      item.status = response;
+      return response;
+    },
+    levels_gen() {
+      let lvl = [];
+      this.lists.level.forEach((element) => {
+        lvl[element.id] = element.coefficient;
+      });
+      this.$set(this, "levels", lvl);
+    },
     get_oil_flow_rate(item) {
-      if (!item.q_liquids) item.q_liquids = 0;
-      if (!item.water_cut) item.water_cut = 0;
-      if (!item.oil_density) item.oil_density = 0;
-
       return (
         parseFloat(item.q_liquids) *
         (1 - parseFloat(item.water_cut) / 100) *
         parseFloat(item.oil_density) *
-        parseFloat(this.levels[item.level])
+        parseFloat(this.levels[item.level.id])
       ).toFixed(2);
     },
     borehole_limit(count) {
       let count_matches = this.filter.borehole.length == count;
-      this.lists.borehole.forEach((element) => {
+      this.lists.borehole_names.forEach((element) => {
         element.disabled = false;
         if (count_matches) {
           if (!this.filter.borehole.includes(element.id)) {
@@ -300,6 +319,43 @@ export default {
           }
         }
       });
+    },
+    async delete_list() {
+      this.loaded = false;
+      await this.remove_field({
+        list: this.get_clear_status_list(),
+      });
+      this.$notify({
+        group: "all",
+        type: "success",
+        title: "Успешно удалено",
+      });
+      this.loaded = true;
+    },
+    get_clear_status_list() {
+      let response = [];
+      this.datasource.forEach((element) => {
+        if (element.status == true) {
+          response.push(element);
+        }
+      });
+      return response;
+    },
+    async show_filter() {
+      if (this.filter.borehole.length == 0) {
+        this.$notify({
+          group: "all",
+          type: "error",
+          title: "Ошибка",
+          text: "Ошибка веберите скважину",
+        });
+        return;
+      }
+      this.loading = true;
+      let response = await this.get_filter(this.filter);
+      this.$set(this, "datasource", response);
+      this.loaded = true;
+      this.loading = false;
     },
     save() {
       if (!this.$refs.table_form.validate()) {
@@ -339,5 +395,8 @@ export default {
 }
 .max_select_width {
   max-width: 250px;
+}
+.max_input_text_width {
+  max-width: 200px;
 }
 </style>

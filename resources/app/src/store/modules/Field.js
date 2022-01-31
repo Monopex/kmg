@@ -19,8 +19,14 @@ const mutations = {
 }
 
 const actions = {
-    GET_LISTS: async (context) => {
-        return await api.Field.lists()
+    GET_LISTS: async (context, payload) => {
+        return await api.Field.lists(payload)
+    },
+    GET_FILTER: async (context, payload) => {
+        return await api.Field.filter(payload)
+    },
+    REMOVE: async (context, payload) => {
+        return await api.Field.remove(payload)
     },
 }
 

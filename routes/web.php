@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Borehole;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 
 
 Route::get('/', function (Request $request) {
+    return Borehole::get();
     // echo $request->user()->powers;
     // Auth::logout();
     return view('welcome');

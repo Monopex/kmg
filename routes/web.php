@@ -18,7 +18,6 @@ use App\Models\Borehole;
 
 
 Route::get('/', function (Request $request) {
-    return Borehole::get();
     // echo $request->user()->powers;
     // Auth::logout();
     return view('welcome');

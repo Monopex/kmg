@@ -23,8 +23,19 @@ class ApiController extends Controller
     {
         return Borehols::filter($request);
     }
-    public function remove (Request $request)
+    
+    public function remove_borehole (Request $request)
     {
         return Borehols::remove($request);
+    }
+
+    public function save_borehole (Request $request)
+    {
+        return Borehols::save($request);
+    }
+
+    public function chars ()
+    {
+        return Borehols::chars();
     }
 }

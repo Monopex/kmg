@@ -3,15 +3,13 @@ import { Pie } from "vue-chartjs";
 export default {
   name: "PieChart",
   extends: Pie,
+  props: {
+   datas: Array,
+  },
   data: () => ({
     chartdata: {
-      labels: ["AA", "BB", "CC"],
-      datasets: [
-        {
-          backgroundColor: ["#41B883", "#E46651", "#00D8FF"],
-          data: [40, 20, 80],
-        },
-      ],
+      labels: [],
+      datasets: [],
     },
     options: {
       responsive: true,
@@ -19,6 +17,7 @@ export default {
     },
   }),
   mounted() {
+    this.$set(this, 'chartdata', this.datas);
     this.renderChart(this.chartdata, this.options);
   },
 };

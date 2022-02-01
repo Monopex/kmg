@@ -93,6 +93,7 @@
         small
         :loading="loading"
         :disabled="loading"
+        @click="save()"
         ><v-icon>mdi-check</v-icon>Сохранить изменения</v-btn
       >
       <v-btn
@@ -134,7 +135,14 @@
             <tbody>
               <template v-for="item in datasource">
                 <tr v-if="filter_item(item)" :key="'item_' + item.id">
-                  <td>{{ item.deposit.title }}</td>
+                  <td>
+                    {{ item.deposit.title }}
+                    <v-icon
+                      v-if="filter.deposit == item.deposit.id"
+                      color="green"
+                      >mdi-check</v-icon
+                    >
+                  </td>
                   <td>{{ item.title }}</td>
                   <td>
                     <v-text-field
@@ -192,10 +200,10 @@
       </v-form>
     </v-col>
     <v-col v-if="char_visible" cols="6">
-      <pie-chart chart-id="pie1" />
+      <pie-chart chart-id="pie1" :datas="char.pie" />
     </v-col>
     <v-col v-if="char_visible" cols="6">
-      <bar-chart chart-id="bar1" />
+      <bar-chart chart-id="bar1" :datas="char.bar" />
     </v-col>
   </v-row>
 </template>
@@ -217,6 +225,7 @@ export default {
     },
     loading: false,
     loaded: false,
+    char: [],
     char_visible: false,
     filter: {
       saved: true,
@@ -270,6 +279,8 @@ export default {
       get_dropdown_lists: "Field/GET_LISTS",
       get_filter: "Field/GET_FILTER",
       remove_field: "Field/REMOVE",
+      save_field: "Field/SAVE",
+      chars: "Field/CHARS",
     }),
     apply_list(list) {
       for (const key in list) {
@@ -279,8 +290,6 @@ export default {
     filter_item(item) {
       let response = true;
       if (this.filter.saved != item.saved) response = false;
-      if (this.filter.deposit != null && this.filter.deposit != item.deposit.id)
-        response = false;
       if (
         this.filter.borehole_type != null &&
         this.filter.borehole_type != item.type
@@ -325,6 +334,8 @@ export default {
       await this.remove_field({
         list: this.get_clear_status_list(),
       });
+      this.char_visible = false;
+      this.show_filter();
       this.$notify({
         group: "all",
         type: "success",
@@ -357,7 +368,8 @@ export default {
       this.loaded = true;
       this.loading = false;
     },
-    save() {
+    async save() {
+
       if (!this.$refs.table_form.validate()) {
         this.$notify({
           group: "all",
@@ -367,6 +379,22 @@ export default {
         });
         return;
       }
+      this.loading = true;
+      await this.save_field({
+        list: this.get_clear_status_list(),
+      });
+      let response = await this.get_dropdown_lists({
+        filter: [
+          "borehole_type",
+          "borehole_condition",
+        ],
+      });
+      this.apply_list(response);
+      this.show_filter();
+      let char = await this.chars();
+      this.$set(this, 'char', char);
+      this.char_visible = true;
+      this.loading = false;
       this.$notify({
         group: "all",
         type: "success",
@@ -377,6 +405,14 @@ export default {
       this.loaded = false;
       this.char_visible = false;
       this.$set(this, "datasource", []);
+      this.$set(this, "filter", {
+        saved: true,
+        borehole: [],
+        deposit: null,
+        borehole_type: null,
+        borehole_condition: null,
+      });
+      this.borehole_limit(5);
     },
     double_empty(v) {
       if (v) {

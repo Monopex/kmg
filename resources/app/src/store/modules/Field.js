@@ -28,6 +28,12 @@ const actions = {
     REMOVE: async (context, payload) => {
         return await api.Field.remove(payload)
     },
+    SAVE: async (context, payload) => {
+        return await api.Field.save(payload)
+    },
+    CHARS: async (context, payload) => {
+        return await api.Field.chars(payload)
+    },
 }
 
 export default {

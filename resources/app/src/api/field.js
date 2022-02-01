@@ -37,4 +37,12 @@ export default {
     return this.execute('post', '/borehole/remove', values)
   },
 
+  save(values) {
+    return this.execute('post', '/borehole/save', values)
+  },
+
+  chars(values) {
+    return this.execute('post', '/borehole/chars', values)
+  },
+
 }

@@ -21,4 +21,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/dropdown/lists', [ApiController::class, 'lists']);
 Route::post('/borehole/filter', [ApiController::class, 'filter']);
-Route::post('/borehole/remove', [ApiController::class, 'remove']);
+Route::post('/borehole/remove', [ApiController::class, 'remove_borehole']);
+Route::post('/borehole/save', [ApiController::class, 'save_borehole']);
+Route::post('/borehole/chars', [ApiController::class, 'chars']);
